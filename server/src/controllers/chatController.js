@@ -5,8 +5,9 @@ const messageModel = require("../models/messageModel");
 const ChatController = {
   sendMessage: async (req, res) => {
     try {
-      const { message, senderId } = req.body;
       const { Id: receiverId } = req.params;
+      const { message } = req.body;
+      const senderId = req.userData._id;
       let conversation = await conversationModel.findOne({
         participants: { $all: [senderId, receiverId] },
       });
@@ -41,7 +42,7 @@ const ChatController = {
   getMessage: async (req, res) => {
     try {
       const { Id: userToChat } = req.params;
-      const { senderId } = req.body;
+      const senderId = req.userData._id;
 
       const conversation = await conversationModel
         .findOne({
@@ -56,7 +57,7 @@ const ChatController = {
 
       const messages = conversation.messages;
 
-      res.status(200).json(messages);
+      return res.status(200).json(messages);
     } catch (error) {
       console.log("Error is getting data", error);
       res.status(500).json({ error: "Internal server error" });

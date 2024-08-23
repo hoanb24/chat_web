@@ -41,14 +41,16 @@ export const RegisterApi = async (email, name, password, confirmPassword) => {
   }
 };
 
-export const getAllUser = async (userId) => {
+export const LogOutApi = async (token) => {
   try {
-    const response = await fetch(baseUrl, {
+    const url = `${baseUrl}/logout`;
+
+    const response = await fetch(url, {
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       method: "POST",
-      body: JSON.stringify({ userId }),
     });
 
     const data = await response.json();
@@ -59,15 +61,72 @@ export const getAllUser = async (userId) => {
   }
 };
 
-export const getMessage = async (senderId, userToChatId) => {
+export const getDataUserLoggedIn = async (token) => {
+  try {
+    const url = `${baseUrl}/getDataUser`;
+    const response = await fetch(url, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      method: "GET",
+    });
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+export const getAllUser = async (token) => {
+  try {
+    const response = await fetch(baseUrl, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      method: "GET",
+    });
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+export const getMessage = async (userToChatId, token) => {
   try {
     const url = `${chatUrl}/getMessage/${userToChatId}`;
     const response = await fetch(url, {
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ senderId }),
       method: "POST",
+    });
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+export const sendMessage = async (userToChatId, message, token) => {
+  try {
+    const url = `${chatUrl}/sendMessage/${userToChatId}`;
+    const response = await fetch(url, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      method: "POST",
+      body: JSON.stringify({ message: message }),
     });
 
     const data = await response.json();

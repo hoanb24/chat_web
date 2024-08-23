@@ -10,7 +10,6 @@ const app = express();
 dotenv.configDotenv();
 
 app.use(express.json());
-app.use(cors());
 app.use(morgan());
 app.use(helmet());
 

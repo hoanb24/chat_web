@@ -4,25 +4,25 @@ const { verifyAccessToken } = require("../helpers/jwt");
 
 const checkAuthentication = async (req, res, next) => {
   try {
-    const token = req.headers.cookie;
-    console.log("req.headers", req.headers);
+    const authHeader = req.headers.authorization;
 
-    console.log("token backend", token);
-
-    const cookies = cookie.parse(token || "");
-    const accessToken = cookies.accessToken;
-    const decoded = verifyAccessToken(accessToken);
-    if (!token) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
-        message: "Your token not found",
+        message: "Authorization token missing or malformed",
       });
     }
+
+    const token = authHeader.split(" ")[1];
+
+    const decoded = verifyAccessToken(token);
+
     const user = await userModel.findById(decoded.userId);
     if (!user) {
       return res.status(401).json({
         message: "User not found",
       });
     }
+
     req.userData = user;
     next();
   } catch (error) {

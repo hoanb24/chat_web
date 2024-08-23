@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 import { NavLink, useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
@@ -22,11 +22,9 @@ const Login = () => {
       if (dataLogin.message !== "Password is incorrect") {
         alert("Login successfully!");
         Cookies.set(
-          "userData",
+          "token",
           JSON.stringify({
-            name: dataLogin.data.name,
-            email: dataLogin.data.email,
-            id: dataLogin.data._id,
+            accessToken: dataLogin.data.accessToken,
           }),
           { expires: 7 }
         );

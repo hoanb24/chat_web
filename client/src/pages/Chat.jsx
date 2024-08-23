@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 
 import ChatDetail from "../components/ChatDetail";
 
-import { getAllUser } from "../../utils/apis";
+import { getAllUser, LogOutApi } from "../../utils/apis";
 
 const Chat = () => {
   const [showLogout, setShowLogout] = useState(false);
@@ -33,27 +33,26 @@ const Chat = () => {
     setMessage((prevMessage) => prevMessage + emojiObject.emoji);
   };
 
-  const handleLogout = () => {
-    alert("Logout successfully");
-    Cookies.remove("userData");
-    navigate("/signin");
+  const handleLogout = async () => {
+    const tokenCookie = Cookies.get("token");
+    if (tokenCookie) {
+      const tokenData = JSON.parse(tokenCookie);
+      const accessToken = tokenData.accessToken;
+
+      alert("Logout successfully");
+      await LogOutApi(accessToken);
+      Cookies.remove("token");
+      navigate("/signin");
+    }
   };
 
   useEffect(() => {
     const fetchDataUser = async () => {
       try {
-        // GET DATA FROM COOKIES
-        const userData = Cookies.get("userData");
+        const userData = Cookies.get("token");
         const parsedUserData = JSON.parse(userData);
-        const response = await getAllUser(parsedUserData.id);
-        // ADD IMAGE FIELD INTO THE DATA
-        const data = response.data.map((user) => ({
-          ...user,
-          image: `https://avatar.iran.liara.run/public/${
-            Math.floor(Math.random() * 100) + 1
-          }`,
-        }));
-        setDataAllUsers(data);
+        const response = await getAllUser(parsedUserData.accessToken);
+        setDataAllUsers(response.data);
       } catch (error) {
         console.log(error);
         throw error;

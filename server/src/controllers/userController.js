@@ -67,9 +67,7 @@ const userController = {
       return res.status(200).json({
         message: "Login successfully",
         data: {
-          _id: userExist._id,
-          name: userExist.name,
-          email: userExist.email,
+          accessToken: accessToken,
         },
       });
     }
@@ -89,11 +87,33 @@ const userController = {
   },
   getAllUsers: async (req, res) => {
     try {
-      const loggedInUserId = req.body.userId;
+      const loggedInUserId = req.userData._id;
+
       const users = await userModel.find({ _id: { $ne: loggedInUserId } });
       if (!users) {
         return res.status(404).json({
           message: "User not found",
+        });
+      }
+      return res.status(200).json({
+        data: users,
+        message: "Get users successfully",
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        message: "Internal Server Error",
+      });
+    }
+  },
+  getDataUserLoggedIn: async (req, res) => {
+    try {
+      const loggedInUserId = req.userData._id;
+
+      const users = await userModel.findOne({ _id: loggedInUserId });
+      if (!users) {
+        return res.status(404).json({
+          message: "Data user not found",
         });
       }
       return res.status(200).json({

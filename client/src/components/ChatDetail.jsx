@@ -1,5 +1,4 @@
-// ChatDetail.js
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   FaSmile,
   FaPaperPlane,
@@ -10,32 +9,25 @@ import {
 import EmojiPicker from "emoji-picker-react";
 import Cookies from "js-cookie";
 
-import { getMessage } from "../../utils/apis";
+import { getMessage, getDataUserLoggedIn } from "../../utils/apis";
 
 const ChatDetail = ({ avatar, name, id }) => {
   const [showEmojis, setShowEmojis] = useState(false);
-  const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [inputMessage, setInputMessage] = useState("");
+  const [dataUserLoggedIn, setDataUserLoggedIn] = useState({});
 
   const handleEmojiClick = (emojiObject) => {
-    setMessage((prevMessage) => prevMessage + emojiObject.emoji);
+    setInputMessage((prevMessage) => prevMessage + emojiObject.emoji);
   };
 
-  const getUserIdFromCookie = () => {
-    // Retrieve the cookie value
-    const userData = Cookies.get("userData");
+  const getAccessTokenFromCookie = () => {
+    const userData = Cookies.get("token");
 
-    // Check if cookie exists
     if (userData) {
-      // Parse the JSON string to an object
       const userObject = JSON.parse(userData);
-
-      // Access the user ID
-      const userId = userObject.id;
-
-      // Log or use the user ID as needed
-      console.log("User ID from cookie:", userId);
-
-      return userId;
+      const accessToken = userObject.accessToken;
+      return accessToken;
     } else {
       console.log("No userData cookie found");
       return null;
@@ -45,9 +37,16 @@ const ChatDetail = ({ avatar, name, id }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const senderId = getUserIdFromCookie();
-        const data = await getMessage(senderId, id);
-        console.log("data message", id);
+        const accessToken = getAccessTokenFromCookie();
+        const data = await getMessage(id, accessToken);
+        const dataUser = await getDataUserLoggedIn(accessToken);
+
+        setDataUserLoggedIn({
+          name: dataUser.data.name,
+          email: dataUser.data.email,
+          id: dataUser.data._id,
+        });
+        setMessages(data);
 
         return data;
       } catch (error) {
@@ -77,34 +76,49 @@ const ChatDetail = ({ avatar, name, id }) => {
       </div>
       {/* End Chat Header */}
       <div className="flex flex-col mt-5 flex-grow overflow-y-auto">
-        <div className="flex justify-end mb-4">
-          <div className="mr-2 py-3 px-4 bg-blue-400 rounded-bl-3xl rounded-tl-3xl rounded-tr-xl text-white">
-            Welcome to the chat!
+        {messages.length === 0 ? (
+          <div className="flex justify-center items-center h-full">
+            <span className="text-gray-500">
+              Nothing there! Let start your conversation.
+            </span>
           </div>
-          <img
-            src={avatar}
-            className="object-cover h-8 w-8 rounded-full"
-            alt=""
-          />
-        </div>
-        <div className="flex justify-start mb-4">
-          <img
-            src={avatar}
-            className="object-cover h-8 w-8 rounded-full"
-            alt=""
-          />
-          <div className="ml-2 py-3 px-4 bg-gray-400 rounded-br-3xl rounded-tr-3xl rounded-tl-xl text-white">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit.
-          </div>
-        </div>
+        ) : (
+          messages.map((msg, index) => (
+            <div key={index} className="mb-4">
+              {msg.senderId === dataUserLoggedIn.id ? (
+                <div className="flex justify-end mb-4">
+                  <div className="mr-2 py-3 px-4 bg-blue-400 rounded-bl-3xl rounded-tl-3xl rounded-tr-xl text-white">
+                    {msg.message}
+                  </div>
+                  <img
+                    src={avatar}
+                    className="object-cover h-8 w-8 rounded-full"
+                    alt=""
+                  />
+                </div>
+              ) : (
+                <div className="flex justify-start mb-4">
+                  <img
+                    src={avatar}
+                    className="object-cover h-8 w-8 rounded-full"
+                    alt=""
+                  />
+                  <div className="ml-2 py-3 px-4 bg-gray-400 rounded-br-3xl rounded-tr-3xl rounded-tl-xl text-white">
+                    {msg.message}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))
+        )}
       </div>
       <div className="py-5 relative flex items-center">
         <input
           className="w-full bg-gray-300 py-5 px-3 rounded-xl"
           type="text"
           placeholder="Type your message here..."
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          value={inputMessage}
+          onChange={(e) => setInputMessage(e.target.value)}
         />
         <FaSmile
           className="absolute right-12 text-2xl text-gray-500 cursor-pointer"
@@ -113,8 +127,8 @@ const ChatDetail = ({ avatar, name, id }) => {
         <FaPaperPlane
           className="absolute right-4 text-2xl text-blue-500 cursor-pointer"
           onClick={() => {
-            alert(`Message sent: ${message}`);
-            setMessage("");
+            alert(`Message sent: ${inputMessage}`);
+            setInputMessage("");
           }}
         />
         {showEmojis && (
